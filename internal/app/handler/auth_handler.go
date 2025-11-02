@@ -25,6 +25,7 @@ type loginRequest struct {
 
 type messageResponse struct {
 	Message string `json:"message"`
+	Success bool   `json:"success"`
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +61,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		// Secure: true, // enable if serving over HTTPS
 	})
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(messageResponse{Message: "login successful"})
+	_ = json.NewEncoder(w).Encode(messageResponse{Message: "login successful", Success: true})
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
@@ -83,5 +84,5 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	})
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(messageResponse{Message: "logout successful"})
+	_ = json.NewEncoder(w).Encode(messageResponse{Message: "logout successful", Success: true})
 }
