@@ -12,10 +12,11 @@ import (
 )
 
 func ConnectMySQL(cfg config.Config) (*sql.DB, error) {
-	// DSN format: user:pass@tcp(host:port)/dbname?parseTime=true&charset=utf8mb4&loc=Local
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&charset=utf8mb4&loc=Local",
-		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
-	)
+    // DSN format: user:pass@tcp(host:port)/dbname?parseTime=true&charset=utf8mb4&loc=Local
+    // Enable multiStatements so migration files with multiple statements can be executed
+    dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&charset=utf8mb4&loc=Local&multiStatements=true",
+        cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
+    )
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err

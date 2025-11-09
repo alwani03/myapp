@@ -6,16 +6,18 @@ import (
 	"time"
 
 	"myapp/config"
+	"myapp/internal/app/service"
 	"myapp/internal/app/session"
 )
 
 type AuthHandler struct {
 	store session.SessionStore
 	cfg   config.Config
+	svc   *service.UserService
 }
 
-func NewAuthHandler(store session.SessionStore, cfg config.Config) *AuthHandler {
-	return &AuthHandler{store: store, cfg: cfg}
+func NewAuthHandler(store session.SessionStore, cfg config.Config, svc *service.UserService) *AuthHandler {
+	return &AuthHandler{store: store, cfg: cfg, svc: svc}
 }
 
 type loginRequest struct {
@@ -40,12 +42,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Username != h.cfg.AdminUser || req.Password != h.cfg.AdminPassword {
+	// Authenticate against database
+	user, err := h.svc.Authenticate(service.LoginParams{UsernameOrEmail: req.Username, Password: req.Password})
+	if err != nil {
 		http.Error(w, "gagal login", http.StatusUnauthorized)
 		return
 	}
 
-	sess, err := h.store.Create(req.Username)
+	sess, err := h.store.Create(user.Username)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
