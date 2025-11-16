@@ -21,6 +21,7 @@ type Config struct {
     DBPassword string
     DBName     string
     DBDriver   string
+    DBOptions  string
 }
 
 func Load() Config {
@@ -76,10 +77,11 @@ func Load() Config {
 	pass := os.Getenv("DB_PASSWORD")
 	name := os.Getenv("DB_NAME")
 
-	driver := os.Getenv("DB_DRIVER")
-	if driver == "" {
-		driver = "mysql" // default
-	}
+    driver := os.Getenv("DB_DRIVER")
+    if driver == "" {
+        driver = "mysql" // default
+    }
+    opts := os.Getenv("DB_OPTIONS")
 
     log.Printf("Loaded config: Port=%d, JWT_SECRET=%s, Admin=%s, SessionCookie=%s, SessionTTL=%d, DB=%s:%d/%s, DB_DRIVER=%s", port, secret, adminUser, sessionCookie, sessionTTL, host, dbPort, name, driver)
     return Config{
@@ -95,5 +97,6 @@ func Load() Config {
         DBPassword: pass,
         DBName:     name,
         DBDriver:   driver,
+        DBOptions:  opts,
     }
 }

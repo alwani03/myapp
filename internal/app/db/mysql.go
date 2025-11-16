@@ -12,24 +12,36 @@ import (
 )
 
 func ConnectMySQL(cfg config.Config) (*sql.DB, error) {
-    // DSN format: user:pass@tcp(host:port)/dbname?parseTime=true&charset=utf8mb4&loc=Local
-    // Enable multiStatements so migration files with multiple statements can be executed
-    dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&charset=utf8mb4&loc=Local&multiStatements=true",
-        cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
+    base := "parseTime=true&charset=utf8mb4&loc=Local&multiStatements=true"
+    if cfg.DBOptions != "" {
+        base = cfg.DBOptions + "&" + base
+    }
+    host := cfg.DBHost
+    if host == "localhost" {
+        host = "127.0.0.1"
+    }
+    dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s",
+        cfg.DBUser, cfg.DBPassword, host, cfg.DBPort, cfg.DBName, base,
     )
-	db, err := sql.Open("mysql", dsn)
+    db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
 	}
-	db.SetConnMaxLifetime(0)
-	db.SetMaxIdleConns(5)
-	db.SetMaxOpenConns(10)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	if err := db.PingContext(ctx); err != nil {
-		db.Close()
-		return nil, err
-	}
-	return db, nil
+    db.SetConnMaxLifetime(0)
+    db.SetMaxIdleConns(5)
+    db.SetMaxOpenConns(10)
+    for i := 0; i < 10; i++ {
+        ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+        err = db.PingContext(ctx)
+        cancel()
+        if err == nil {
+            return db, nil
+        }
+        time.Sleep(1 * time.Second)
+    }
+    db.Close()
+    if err != nil {
+        return nil, err
+    }
+    return db, nil
 }
